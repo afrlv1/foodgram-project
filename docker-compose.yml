@@ -13,7 +13,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
-      - ./.env
+      - foodgram/.env
 
   web:
     image: nonameists/foodgram:v1
@@ -27,7 +27,7 @@ services:
     depends_on:
       - db
     env_file:
-      - ./.env
+      - foodgram/.env
 
   nginx:
     build: ./nginx

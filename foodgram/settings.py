@@ -80,21 +80,23 @@ WSGI_APPLICATION = "foodgram.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
+
 """
+'default': {
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': os.environ.get('DB_NAME'),
+    'USER': os.environ.get('DB_USER'),
+    'PASSWORD': os.environ.get('DB_PASSWORD'),
+    'HOST': os.environ.get('DB_HOST'),
+    'PORT': os.environ.get('DB_PORT'),
+},
+"""
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASSWORD'),
-        'HOST': os.environ.get('DB_HOST'),
-        'PORT': os.environ.get('DB_PORT'),
-    }
-}
-"""
-DATABASES = {
-    'default': env.db(),
-    'extra': env.db('SQLITE_URL', default='sqlite:////tmp/my-tmp-sqlite.db')
+         'ENGINE': 'django.db.backends.sqlite3',
+         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+     }
 }
 
 
@@ -120,7 +122,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-LANGUAGE_CODE = "Ru-r"
+LANGUAGE_CODE = "en-en"
 
 TIME_ZONE = "UTC"
 
