@@ -75,5 +75,5 @@ class RecipeForm(forms.ModelForm):
         for key in q_dict.keys():
             if key.startswith('nameIngredient'):
                 n = key.split('_')[1]
-                result[q_dict['nameIngredient_'+n]] = q_dict['valueIngredient_'+n]
+                result[q_dict['nameIngredient_' + n]] = q_dict['valueIngredient_' + n]
         return result

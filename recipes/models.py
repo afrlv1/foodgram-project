@@ -95,5 +95,4 @@ def is_following(self, user):
     return self.following.filter(user=user).exists()
 
 
-
 User.add_to_class("is_following", is_following)
