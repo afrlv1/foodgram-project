@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static %}
+{% block stylesheet %}
+    <link rel="stylesheet" href="{% static 'pages/index.css' %}">
+{% endblock %}
+{% block title %} Последние обновления {% endblock %}
+{% block main_header %}
+    <h1 class="main__title">Рецепты</h1>
+    {% include 'tags.html' %}
+{% endblock main_header%}
+{% block content %}
+<div class="card-list">
+{% for post in recipes %}
+    <div class="card" data-id="{{ post.id }}">
+        <a class="link" target="_blank"><img src="{{ post.image.url }}" alt="image is not available" class="card__image"></a>
+        <div class="card__body">
+            <a class="card__title link" href="{% url 'recipe_page' post.id %}" target="_blank">{{ post.name }}</a>
+            {% if post.tags %}
+            <ul class="card__items">
+                {% for tag in post.tags.all %}
+                <li class="card__item"><span class="badge badge_style_{{ tag.color}}">{{ tag.name }}</span></li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <div class="card__items card__items_column">
+                <p class="card__text"><span class="icon-time"></span> {{ post.cooking_time }} мин.</p>
+                <p class="card__text"><span class="icon-user"></span> <a href="{% url 'profile' post.author.username %}" style="color: black">{{ post.author.get_full_name }}</a></p>
+            </div>
+        </div>
+        <div class="card__footer">
+        {% if post.id in card_list %}
+            <button class="button button_style_light-blue-outline" name="purchpurchases"><span class="icon-check button__icon"></span> Рецепт добавлен</button>
+        {%  else %}
+            <button class="button button_style_light-blue" name="purchpurchases" data-out><span class="icon-plus button__icon"></span>Добавить в покупки</button>
+        {% endif %}
+            {% if post.id in following_list %}
+                <button class="button button_style_none" name="favorites"><span class="icon-favorite icon-favorite_active"></span></button>
+            {% else %}
+                <button class="button button_style_none" name="favorites" data-out><span class="icon-favorite"></span></button>
+            {% endif %}
+        </div>
+    </div>
+{% endfor %}
+</div>
+
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/config/config.js' %}"></script>
+    <script src="{% static 'js/components/MainCards.js' %}"></script>
+    <script src="{% static 'js/components/Purchpurachases.js' %}"></script>
+    <script src="{% static 'js/components/CardList.js' %}"></script>
+    <script src="{% static 'js/components/Header.js' %}"></script>
+    <script src="{% static 'js/api/Api.js' %}"></script>
+    <script src="{% static 'indexNotAuth.js' %}"></script>
+{% endblock js %}

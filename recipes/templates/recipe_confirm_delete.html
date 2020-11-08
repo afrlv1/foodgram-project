@@ -1,0 +1,17 @@
+{% extends 'formRecipe.html' %}
+{% block content %}
+    <div class="main__header">
+        <h1 class="main__title">{% block title %}Удаление рецепта{% endblock %} {{ recipe.name }}</h1>
+    </div>
+    <div>
+    <h3 align="center"> Ваш рецепт будет удален безвозвратно</h3>
+    </div>
+    <div class="form-container">
+        <form class="form" method="POST">
+            {% csrf_token %}
+            <div class="form__footer">
+                {% block form_footer %}<button class="button button_style_blue">Удалить</button>{% endblock %}
+            </div>
+        </form>
+    </div>
+{% endblock %}
