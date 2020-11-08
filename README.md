@@ -1,5 +1,5 @@
 
-[![Yamdb-app workflow](https://github.com/afrlv1/foodgram-project/workflows/foodgram-project_workflow/badge.svg)](https://github.com/afrlv1/foodgram-project/actions)
+![.github/workflows/main.yml](https://github.com/afrlv1/foodgram-project/workflows/.github/workflows/main.yml/badge.svg)
 
 # foodgram-project
 
