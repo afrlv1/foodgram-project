@@ -51,6 +51,6 @@ jobs:
         key: ${{ secrets.DEPLOY_SERVER_KEY }}
         passphrase: ${{ secrets.DEPLOY_SERVER_PASSPHRASE }} # если ваш ssh-ключ c паролем
         script: |
-          sudo docker pull afrlv/foodgram-project:v2
+          sudo docker pull afrlv/foodgram:v2
           sudo docker stop $(sudo docker ps -a -q)
-          sudo docker run --rm -d -p 5000:5000 afrlv/foodgram-project:v2
+          sudo docker run --rm -d -p 5000:5000 afrlv/foodgram:v2
