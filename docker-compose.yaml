@@ -16,7 +16,7 @@ services:
     build: .
     restart: always
     expose:
-      - 8020:8020
+      - 8020
     depends_on:
       - db
     env_file:
