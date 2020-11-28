@@ -15,7 +15,7 @@ services:
   web:
     build: .
     restart: always
-    ports:
+    expose:
       - 8020:8020
     depends_on:
       - db
