@@ -21,7 +21,7 @@ jobs:
     - name: Lint with flake8
       run: flake8 . --config=.flake8
 
-  build_and_push_to_docker_hub:
+  push_to_docker_hub:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
     needs: tests
@@ -52,12 +52,11 @@ jobs:
         port: ${{ secrets.DEPLOY_SERVER_PORT }}
         username: ${{ secrets.DEPLOY_SERVER_USERNAME }}
         key: ${{ secrets.DEPLOY_SERVER_KEY }}
-        passphrase: ${{ secrets.DEPLOY_SERVER_PASSPHRASE }} # если ваш ssh-ключ c паролем
+        passphrase: ${{ secrets.DEPLOY_SERVER_PASSPHRASE }}
         script: |
-          sudo docker pull afrlv/foodgram:v2
+          sudo docker pull afrlv/foodgram:latest
           sudo docker stop $(sudo docker ps -a -q)
           sudo docker run --rm -d -p 5000:5000 afrlv/foodgram:latest
-
   send_message:
     runs-on: ubuntu-latest
     needs: deploy
