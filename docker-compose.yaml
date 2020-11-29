@@ -12,12 +12,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     env_file:
       - .env
-
   web:
     build: .
     restart: always
     ports:
-      - "8020:8020"
+      - 8020:8020
     depends_on:
       - db
     env_file:
@@ -25,14 +24,14 @@ services:
     volumes:
       - static:/code/static/
       - media:/code/media/
-    command: sh -c "python manage.py collectstatic --noinput && python manage.py makemigrations --noinput && python manage.py migrate --noinput && gunicorn foodgram.wsgi:application --bind 0.0.0.0:8020"
-
+    command: bash -c "python manage.py collectstatic --noinput && python manage.py makemigrations --noinput && python manage.py migrate --noinput && python manage.py import_ingred && gunicorn backend.wsgi:application --bind 0.0.0.0:8020"
   nginx:
-    build: ./nginx
-    volumes:
-      - static:/static/
-      - media:/media/
+    image: nginx:1.19.0
     ports:
-      - 80:80
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - static:/static
+      - media:/media
     depends_on:
-      - web
+      -  web
