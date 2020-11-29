@@ -27,15 +27,17 @@ services:
     command: bash -c "python manage.py makemigrations --noinput && python manage.py migrate --noinput && gunicorn foodgram.wsgi:application --bind 0.0.0.0:8020"
 
   nginx:
-    image: nginx:1.19.0
-    ports:
-      - "80:80"
+    build: ./nginx
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - static:/static
-      - media:/media
+      - static:/static/
+      - media:/media/
+    ports:
+      - 80:80
     depends_on:
-      -  web
+      - web
+    environment:
+      - NGINX_HOST=127.0.0.1
+      - NGINX_PORT=80
 
 
 
