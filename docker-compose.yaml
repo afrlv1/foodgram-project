@@ -24,7 +24,7 @@ services:
     volumes:
       - static:/code/static/
       - media:/code/media/
-    command: bash -c "python manage.py makemigrations --noinput && python manage.py migrate --noinput && gunicorn foodgram.wsgi:application --bind 0.0.0.0:8020"
+    command: sh -c "python manage.py makemigrations && python manage.py migrate && gunicorn foodgram.wsgi:application --bind 0.0.0.0:8020"
 
   nginx:
     build: ./nginx
@@ -35,9 +35,3 @@ services:
       - 80:80
     depends_on:
       - web
-    environment:
-      - NGINX_HOST=127.0.0.1
-      - NGINX_PORT=80
-
-
-
