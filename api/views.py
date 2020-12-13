@@ -9,6 +9,24 @@ from recipes.models import FollowRecipe, Recipe, FollowUser, ShoppingList
 from users.forms import User
 
 
+class GenericView(LoginRequiredMixin, View):
+    def post(self, request, klass, *args, **kwargs):
+        req_ = json.loads(request.body)
+        queryset_id = req_.get("id", None)
+        if queryset_id is not None:
+            queryset = get_object_or_404(Recipe, id=recipe_id)
+            obj, created = FollowRecipe.objects.get_or_create(user=request.user, recipe=queryset)
+            if created:
+                return JsonResponse({"success": True})
+            return JsonResponse({"success": False})
+        return JsonResponse({"success": False}, status=400)
+
+    def delete(self, request, recipe_id):
+        queryset = get_object_or_404(FollowRecipe, recipe=recipe_id, user=request.user)
+        queryset.delete()
+        return JsonResponse({"success": True})
+
+
 class Ingredients(LoginRequiredMixin, View):
     """
     Получение ингредиентов для создания/редактирования рецепвта
