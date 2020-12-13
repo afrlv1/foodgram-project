@@ -38,13 +38,14 @@
 
         <div class="author-subscribe" data-author="{{ username.id }}">
             {% if user.is_authenticated and not user == username%}
-            {% if username|is_follow:user %}
-            <button class="button button_style_light-blue button_size_auto" name="subscribe"><span
-                    class="icon-check button__icon"></span>Отписаться от автора </button></p>
-            {% else %}
-            <p style="padding: 0 0 2em 0;"><button class="button button_style_light-blue button_size_auto"
+                {% if username|is_follow:user %}
+                    <button class="button button_style_light-blue button_size_auto" name="subscribe">
+                        <span class="icon-check button__icon"></span>Отписаться от автора </button></p>
+                {% else %}
+
+                    <p style="padding: 0 0 2em 0;"><button class="button button_style_light-blue button_size_auto"
                     name="subscribe" data-out>Подписаться на автора</button></p>
-            {% endif %}
+                {% endif %}
             {% endif %}
         </div>
         <div class="card-list">
@@ -52,7 +53,7 @@
             <div class="card" data-id="{{ post.pk }}">
                 <a href="{% url 'recipe_view' post.author.username post.id %}" class="link" target="_blank">
                     {% if post.image %}
-                    <img src="{{ post.image.url }}"" alt=" {% static '/images/testCardImg.png' %}"
+                    <img src="{{ post.image.url }}" alt=" {% static '/images/testCardImg.png' %}"
                         class="card__image"></a>
                 {% else %}
                 <img src="{% static '/images/testCardImg.png' %}"" alt=" Image was broken" class="card__image"></a>

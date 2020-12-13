@@ -147,8 +147,8 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 # указываем директорию, в которую будут складываться файлы писем
 EMAIL_HOST = 'smtp.yandex.ru'
 EMAIL_PORT = 465
-EMAIL_HOST_USER = os.environ.get('EMAIL')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
+EMAIL_HOST_USER = 'afrlvsystem@yandex.ru'
+EMAIL_HOST_PASSWORD = '123Atom123'
 EMAIL_USE_SSL = True
 SERVER_EMAIL = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
