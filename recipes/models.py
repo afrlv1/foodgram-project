@@ -43,7 +43,7 @@ class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(
         Ingredients, on_delete=models.CASCADE, related_name="recipes"
     )
-    amount = models.IntegerField(default=1)
+    amount = models.PositiveIntegerField(default=1)
 
 
 class ShoppingList(models.Model):
