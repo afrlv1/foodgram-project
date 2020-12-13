@@ -5,14 +5,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views import View
 
-from recipes.models import (
-    Ingredients,
-    FollowRecipe,
-    Recipe,
-    User,
-    FollowUser,
-    ShoppingList,
-)
+from recipes.models import Ingredients, FollowRecipe, Recipe, User, FollowUser, ShoppingList
 
 
 class Ingredients(LoginRequiredMixin, View):
