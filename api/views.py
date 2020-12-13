@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.views import View
 
 from recipes.models import (
-    Ingredient,
+    Ingredients,
     FollowRecipe,
     Recipe,
     User,
@@ -23,7 +23,7 @@ class Ingredients(LoginRequiredMixin, View):
     def get(self, request):
         query = request.GET.get("query", None)
         if query is not None:
-            response = Ingredient.objects.filter(title__icontains=query).values(
+            response = Ingredients.objects.filter(title__icontains=query).values(
                 "title", "dimension"
             )
             return JsonResponse(list(response), safe=False)

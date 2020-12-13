@@ -1,174 +1,165 @@
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+import datetime as dt
+from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 from django.db.models import Sum
 from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView
-
-from .forms import RecipeForm
-from .mixins import RecipeObjectMixin, AuthorRequiredMixin
-from .models import Recipe, User, ShoppingList, FollowUser, FollowRecipe
+from django.shortcuts import render, redirect, get_object_or_404
+from .forms import RecipesForm
+from .models import Recipe, Ingredients, FollowUser, ShoppingList, RecipeIngredient, Tag
+from .utils import get_ingredients
 
 
-class IndexView(RecipeObjectMixin, ListView):
-    queryset = Recipe.objects.select_related('author').prefetch_related('tags')
-    context_object_name = 'recipes'
-    ordering = ['-pub_date']
-    paginate_by = 6
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        filters = self.request.GET.getlist('filters')
-
-        if filters:
-            qs = qs.filter(tags__slug__in=filters).distinct()
-        return qs
-
-    def get_template_names(self):
-        # показывать разные шаблоны в зависимости от залогинен ли пользователь
-        if self.request.user.is_authenticated:
-            return ['index.html']
-        return ['indexNotAuth.html']
-
-
-class FavoriteView(LoginRequiredMixin, RecipeObjectMixin, ListView):
-    template_name = 'favorite.html'
-    context_object_name = 'recipes'
-    paginate_by = 6
-
-    def get_queryset(self):
-        qs = FollowRecipe.objects.select_related(
-            'user', 'recipe'
-        ).filter(
-            user=self.request.user
-        ).order_by(
-            '-recipe__pub_date'
-        )
-
-        filters = self.request.GET.getlist('filters')
-        if filters:
-            qs = qs.filter(recipe__tags__slug__in=filters).distinct()
-        return qs
-
-
-class ProfileView(RecipeObjectMixin, ListView):
-    template_name = 'authorRecipe.html'
-    context_object_name = 'recipes'
-    paginate_by = 6
-
-    def get_queryset(self):
-        username = self.kwargs.get("username")
-        qs = Recipe.objects.select_related(
-            'author'
-        ).prefetch_related(
-            'tags', 'ingredients'
-        ).filter(
-            author__username=username
-        ).order_by(
-            '-pub_date'
-        )
-
-        filters = self.request.GET.getlist('filters')
-        if filters:
-            qs = qs.filter(tags__slug__in=filters).distinct()
-        return qs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['profile'] = get_object_or_404(User, username=self.kwargs.get('username'))
-
-        return context
-
-
-class RecipeDetailView(RecipeObjectMixin, DetailView):
-    model = Recipe
-    context_object_name = 'recipe'
-
-    def get_template_names(self):
-        # показывать разные шаблоны в зависимости от залогинен ли пользователь
-        if self.request.user.is_authenticated:
-            return ['recipePage.html']
-        return ['singlePageNotAuth.html']
-
-
-class FollowView(LoginRequiredMixin, ListView):
-    template_name = 'myFollow.html'
-    context_object_name = 'following'
-    paginate_by = 3
-
-    def get_queryset(self):
-        qs = FollowUser.objects.select_related(
-            'user', 'author'
-        ).filter(
-            user=self.request.user
-        )
-
-        return qs
-
-
-class CardView(LoginRequiredMixin, ListView):
-    template_name = 'shopList.html'
-    context_object_name = 'card'
-
-    def get_queryset(self):
-        qs = ShoppingList.objects.select_related(
-            'user', 'recipe'
-        ).filter(
-            user=self.request.user
-        )
-        return qs
-
-
-class RecipeCreateView(LoginRequiredMixin, CreateView):
-    form_class = RecipeForm
-    template_name = 'formRecipe.html'
-
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        # После создания рецепта показать страницу только что созданного рецепта
-        return reverse_lazy('recipe_page', kwargs={'pk': self.object.pk})
-
-
-class RecipeEditView(LoginRequiredMixin, AuthorRequiredMixin, UpdateView):
-    model = Recipe
-    form_class = RecipeForm
-    template_name = 'formChangeRecipe.html'
-
-    def get_success_url(self):
-        # После редактирования рецепта вернуться на страницу отредактированного рецепта
-        return reverse_lazy('recipe_page', kwargs={'pk': self.kwargs['pk']})
-
-
-class RecipeDeleteView(LoginRequiredMixin, AuthorRequiredMixin, DeleteView):
-    template_name = 'recipe_confirm_delete.html'
-    model = Recipe
-    # После удаления рецепта вернуться на главную страницу
-    success_url = reverse_lazy("index")
-
-
-@login_required
-def download_card(request):
-    recipes = Recipe.objects.filter(shopping_list__user=request.user)
-    ingredients = recipes.values(
-        'ingredients__title', 'ingredients__dimension'
-    ).annotate(
-        Sum('recipe_ingredients__amount')
+def index(request):
+    tags_filter = request.GET.getlist("filters")
+    recipe_list = Recipe.objects.order_by("-pub_date").all()
+    if tags_filter:
+        recipe_list = recipe_list.filter(tags__slug__in=tags_filter).distinct().all()
+    paginator = Paginator(recipe_list, 6)
+    page_number = request.GET.get("page")
+    page = paginator.get_page(page_number)
+    return render(
+        request,
+        "indexAuth.html",
+        {
+            "page": page,
+            "paginator": paginator,
+        },
     )
 
+
+def new_recipe(request):
+    user = User.objects.get(username=request.user)
+    if request.method == "POST":
+        form = RecipesForm(request.POST or None, files=request.FILES or None)
+        ingredients = get_ingredients(request)
+        if not ingredients:
+            form.add_error(None, "Добавьте ингредиенты")
+        elif form.is_valid():
+            recipe = form.save(commit=False)
+            recipe.author = user
+            recipe.save()
+            for ing_name, amount in ingredients.items():
+                ingredient = get_object_or_404(Ingredients, title=ing_name)
+                recipe_ing = RecipeIngredient(
+                    recipe=recipe, ingredient=ingredient, amount=amount
+                )
+                recipe_ing.save()
+            form.save_m2m()
+            return redirect("index")
+    else:
+        form = RecipesForm()
+    return render(request, "formRecipe.html", {"form": form})
+
+
+def recipe_view(request, recipe_id, username):
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+    username = get_object_or_404(User, username=username)
+    return render(request, "singlePage.html", {"username": username, "recipe": recipe})
+
+
+def profile(request, username):
+    username = get_object_or_404(User, username=username)
+    tag = request.GET.getlist("filters")
+    recipes = Recipe.objects.filter(author=username).order_by("-pub_date").all()
+    if tag:
+        recipes = recipes.filter(tags__slug__in=tag)
+    paginator = Paginator(recipes, 6)
+    page_number = request.GET.get("page")
+    page = paginator.get_page(page_number)
+    return render(
+        request,
+        "authorRecipe.html",
+        {
+            "username": username,
+            "page": page,
+            "paginator": paginator,
+        },
+    )
+
+
+def recipe_edit(request, recipe_id):
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+    if request.user != recipe.author:
+        return redirect("index")
+    if request.method == "POST":
+        form = RecipesForm(
+            request.POST or None, files=request.FILES or None, instance=recipe
+        )
+        ingredients = get_ingredients(request)
+        if form.is_valid():
+            RecipeIngredient.objects.filter(recipe=recipe).delete()
+            recipe = form.save(commit=False)
+            recipe.author = request.user
+            recipe.save()
+            for item in ingredients:
+                RecipeIngredient.objects.create(
+                    ingredient=Ingredients.objects.get(title=f"{item}"),
+                    recipe=recipe,
+                )
+            form.save_m2m()
+        return redirect("index")
+    form = RecipesForm(request.POST or None, files=request.FILES or None, instance=recipe)
+    return render(
+        request,
+        "recipe_edit.html",
+        {"form": form, "recipe": recipe},
+    )
+
+
+def recipe_delete(request, recipe_id):
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+    if request.user == recipe.author:
+        recipe.delete()
+    return redirect("index")
+
+
+def favorite(request):
+    tags_filter = request.GET.getlist("filters")
+    recipe_list = Recipe.objects.filter(follow_recipe__user__id=request.user.id).all()
+    if tags_filter:
+        recipe_list = recipe_list.filter(tags__slug__in=tags_filter).distinct().all()
+    paginator = Paginator(recipe_list, 6)
+    page_number = request.GET.get("page")
+    page = paginator.get_page(page_number)
+    return render(
+        request,
+        "favorite.html",
+        {"page": page, "paginator": paginator},
+    )
+
+
+def follow(request):
+    author_list = FollowUser.objects.filter(user__id=request.user.id).all()
+    paginator = Paginator(author_list, 6)
+    page_number = request.GET.get("page")
+    page = paginator.get_page(page_number)
+    return render(
+        request,
+        "myFollow.html",
+        {"page": page, "paginator": paginator, "author": author_list},
+    )
+
+
+def shopping_list(request):
+    if request.user.is_active:
+        shop_list = ShoppingList.objects.filter(user=request.user).all()
+        return render(request, "shopList.html", {"shop_list": shop_list})
+    else:
+        shop_list = ShoppingList.objects.first()
+        return render(request, "shopList.html", {"shop_list": shop_list})
+
+
+def download_card(request):
+    recipes = Recipe.objects.filter(recipe_shopping_list__user=request.user)
+    ingredients = recipes.values(
+        "ingredients__title", "ingredients__dimension"
+    ).annotate(total_amount=Sum("recipe_ingredients__amount"))
     file_data = ""
-
-    # Проходимся по ингредиентам вида ['молоко', 'мл', 150]
-    # Делаю все значения в str и конкатинирую их(с переносом строки \n) в пустой файл
     for item in ingredients:
-        line = ' '.join(str(value) for value in item.values())
-        file_data += line + '\n'
-
-    response = HttpResponse(file_data, content_type='application/text charset=utf-8')
-    response['Content-Disposition'] = 'attachment; filename="ShoppingList.txt"'
+        line = " ".join(str(value) for value in item.values())
+        file_data += line + "\n"
+    response = HttpResponse(file_data, content_type="application/text charset=utf-8")
+    response["Content-Disposition"] = 'attachment; filename="ShoppingList.txt"'
     return response
 
 
